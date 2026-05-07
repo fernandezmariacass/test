@@ -1,0 +1,22 @@
+"""
+instance/config.py — SECRET overrides (git-ignored)
+⚠️  This file holds real secrets and MUST NEVER be committed.
+    It overrides app/config.py values.
+"""
+
+# Example — fill in real values:
+
+# SECRET_KEY = "a-very-long-random-string-generated-by-secrets.token_hex(32)"
+
+# ALLOWED_IPS_RAW = "203.0.113.45,198.51.100.22"
+# ALLOWED_NETWORKS = ["192.168.1.0/24", "10.0.0.0/8"]
+
+# RESEND_API_KEY = "re_xxxx..."
+# NOTIFY_EMAIL_ENABLED = True
+# NOTIFY_TO_EMAIL = "security@myorg.com"
+
+# TELEGRAM_BOT_TOKEN = "12345:ABCxxx"
+# TELEGRAM_CHAT_ID = "987654321"
+# NOTIFY_TELEGRAM_ENABLED = True
+
+# CAMERA_SOURCE = "rtsp://admin:password@192.168.1.100/stream"

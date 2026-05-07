@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
+  <div class="w-full max-w-md">
+
+    <!-- Brand mark -->
+    <div class="text-center mb-8">
+      <span class="text-5xl" role="img" aria-label="SecureVision shield logo">🛡️</span>
+      <h1 class="mt-4 text-3xl font-bold text-white tracking-tight">SecureVision</h1>
+      <p class="mt-1 text-slate-400 text-sm">Secure access monitoring system</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-2xl">
+
+      <h2 class="text-xl font-semibold text-white mb-6" id="login-heading">
+        Sign in to your account
+      </h2>
+
+      {% if rate_limited %}
+      <!-- GEDSI: clear, non-blaming error message -->
+      <div role="alert"
+           class="mb-6 p-4 bg-danger-500/20 border border-danger-500/40 rounded-lg
+                  text-danger-400 text-sm flex items-start gap-3">
+        <span aria-hidden="true" class="text-lg">🔒</span>
+        <div>
+          <p class="font-semibold">Access temporarily paused</p>
+          <p class="mt-1 text-danger-300">
+            For your security, further sign-in attempts from your location
+            have been paused. Please wait a few minutes before trying again.
+          </p>
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="POST"
+            action="{{ url_for('auth.login') }}"
+            novalidate
+            aria-labelledby="login-heading"
+            class="space-y-5">
+
+        {{ form.hidden_tag() }}
+
+        <!-- Username -->
+        <div>
+          <label for="{{ form.username.id }}"
+                 class="block text-sm font-medium text-slate-300 mb-1.5">
+            {{ form.username.label.text }}
+            <span class="text-danger-400" aria-hidden="true">*</span>
+            <span class="sr-only">(required)</span>
+          </label>
+          {{ form.username(
+               id=form.username.id,
+               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5
+                      text-white placeholder-slate-500 text-sm
+                      focus:border-brand-500 focus:bg-slate-800 focus:ring-0
+                      transition-colors " ~ ('border-danger-500' if form.username.errors else ''),
+               **{'aria-describedby': form.username.id ~ '-error' if form.username.errors else ''}
+             ) }}
+          {% if form.username.errors %}
+          <p id="{{ form.username.id }}-error"
+             role="alert"
+             class="mt-1.5 text-xs text-danger-400">
+            {{ form.username.errors[0] }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="{{ form.password.id }}"
+                   class="text-sm font-medium text-slate-300">
+              {{ form.password.label.text }}
+              <span class="text-danger-400" aria-hidden="true">*</span>
+              <span class="sr-only">(required)</span>
+            </label>
+          </div>
+          <div class="relative">
+            {{ form.password(
+                 id=form.password.id,
+                 class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5
+                        text-white placeholder-slate-500 text-sm pr-12
+                        focus:border-brand-500 focus:ring-0 transition-colors " ~
+                        ('border-danger-500' if form.password.errors else ''),
+                 **{'aria-describedby': form.password.id ~ '-error' if form.password.errors else ''}
+               ) }}
+            <!-- Show/hide password toggle -->
+            <button type="button"
+                    id="toggle-password"
+                    aria-label="Show password"
+                    aria-pressed="false"
+                    class="absolute right-3 top-1/2 -translate-y-1/2
+                           text-slate-400 hover:text-white transition-colors p-1"
+                    onclick="togglePassword()">
+              <span id="eye-icon" aria-hidden="true">👁️</span>
+            </button>
+          </div>
+          {% if form.password.errors %}
+          <p id="{{ form.password.id }}-error"
+             role="alert"
+             class="mt-1.5 text-xs text-danger-400">
+            {{ form.password.errors[0] }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Remember me -->
+        <div class="flex items-center gap-3">
+          {{ form.remember_me(
+               id=form.remember_me.id,
+               class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500
+                      focus:ring-brand-500 cursor-pointer"
+             ) }}
+          <label for="{{ form.remember_me.id }}"
+                 class="text-sm text-slate-300 cursor-pointer">
+            {{ form.remember_me.label.text }}
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold
+                       py-2.5 px-4 rounded-lg text-sm transition-colors duration-150
+                       focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2
+                       focus-visible:ring-offset-slate-900"
+                {{ 'disabled aria-disabled="true"' if rate_limited else '' }}>
+          {{ form.submit.label.text }}
+        </button>
+
+      </form>
+    </div>
+
+    <!-- GEDSI: inclusive footer note -->
+    <p class="mt-6 text-center text-xs text-slate-500">
+      This system uses inclusive, accessible design.<br />
+      If you need assistance, contact your system administrator.
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePassword() {
+    const input = document.getElementById('{{ form.password.id }}');
+    const btn   = document.getElementById('toggle-password');
+    const icon  = document.getElementById('eye-icon');
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    btn.setAttribute('aria-pressed', String(!showing));
+    icon.textContent = showing ? '👁️' : '🚫';
+  }
+</script>
+{% endblock %}

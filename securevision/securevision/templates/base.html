@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SecureVision — Accessible security monitoring dashboard" />
+  <title>{% block title %}SecureVision{% endblock %} | SecureVision</title>
+
+  <!-- Skip-to-content link (GEDSI: keyboard & screen-reader first) -->
+  <a href="#main-content"
+     class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2
+            focus:bg-amber-400 focus:text-black focus:px-4 focus:py-2 focus:rounded focus:font-bold">
+    Skip to main content
+  </a>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0f9ff', 100:'#e0f2fe', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 900:'#0c4a6e' },
+            accent: { 400:'#fb923c', 500:'#f97316' },
+            danger: { 400:'#f87171', 500:'#ef4444', 600:'#dc2626' },
+            success: { 400:'#4ade80', 500:'#22c55e' },
+          },
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <!-- IBM Plex Sans — chosen for readability & accessibility -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* High-contrast focus ring — WCAG 2.4.7 */
+    :focus-visible { outline: 3px solid #f97316; outline-offset: 3px; border-radius: 3px; }
+    /* Reduced-motion support */
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="h-full bg-slate-950 text-slate-100 font-sans antialiased">
+
+  {% if current_user.is_authenticated %}
+  <!-- ── Sidebar navigation ────────────────────────────────────────────── -->
+  <div class="flex h-full">
+    <nav id="sidebar"
+         role="navigation"
+         aria-label="Main navigation"
+         class="w-64 flex-shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col">
+
+      <!-- Logo / brand -->
+      <div class="px-6 py-5 border-b border-slate-800">
+        <a href="{{ url_for('dashboard.index') }}"
+           aria-label="SecureVision — go to dashboard"
+           class="flex items-center gap-3">
+          <span class="text-2xl" aria-hidden="true">🛡️</span>
+          <span class="font-bold text-lg tracking-tight text-white">SecureVision</span>
+        </a>
+      </div>
+
+      <!-- Nav links -->
+      <ul role="list" class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {% set nav_items = [
+          ('dashboard.index',  '📊', 'Dashboard',    'all'),
+          ('camera.view',      '📷', 'Live Feed',     'all'),
+          ('admin.logs',       '📋', 'Access Logs',   'admin'),
+          ('admin.users',      '👥', 'User Management','admin'),
+          ('admin.allowlist',  '🔒', 'IP Allow-list', 'admin'),
+        ] %}
+        {% for endpoint, icon, label, role_req in nav_items %}
+          {% if role_req == 'all' or (role_req == 'admin' and current_user.is_admin) %}
+          <li>
+            <a href="{{ url_for(endpoint) }}"
+               aria-current="{{ 'page' if request.endpoint == endpoint else 'false' }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                      transition-colors duration-150
+                      {{ 'bg-brand-700 text-white' if request.endpoint == endpoint
+                         else 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+              <span aria-hidden="true">{{ icon }}</span>
+              {{ label }}
+            </a>
+          </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+
+      <!-- User info + logout -->
+      <div class="px-4 py-4 border-t border-slate-800">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center
+                      text-white font-bold text-sm select-none"
+               aria-hidden="true">
+            {{ current_user.username[0].upper() }}
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-sm font-medium text-white truncate">{{ current_user.username }}</p>
+            <p class="text-xs text-slate-400 capitalize">{{ current_user.role }}</p>
+          </div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}"
+           class="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400
+                  hover:text-red-400 hover:bg-red-950 rounded-lg transition-colors">
+          <span aria-hidden="true">🚪</span>
+          Sign out
+        </a>
+      </div>
+    </nav>
+
+    <!-- ── Main content ──────────────────────────────────────────────────── -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top bar -->
+      <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between"
+              role="banner">
+        <h1 class="text-base font-semibold text-white">
+          {% block page_title %}Dashboard{% endblock %}
+        </h1>
+        <div class="flex items-center gap-4 text-xs text-slate-400" aria-live="polite">
+          <span>{{ now.strftime('%A, %d %b %Y %H:%M') if now else '' }}</span>
+          <!-- Live camera status indicator -->
+          <span id="cam-status-badge"
+                role="status"
+                aria-label="Camera status"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-full
+                       {% if camera_active %}bg-success-500/20 text-success-400{% else %}bg-slate-700 text-slate-400{% endif %}">
+            <span class="w-1.5 h-1.5 rounded-full
+                         {% if camera_active %}bg-success-400 animate-pulse{% else %}bg-slate-500{% endif %}"
+                  aria-hidden="true"></span>
+            {% if camera_active %}Camera live{% else %}Camera offline{% endif %}
+          </span>
+        </div>
+      </header>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div role="alert" aria-live="assertive" class="px-6 pt-4 space-y-2">
+          {% for category, message in messages %}
+          <div class="flex items-start gap-3 px-4 py-3 rounded-lg text-sm font-medium
+                      {{ 'bg-success-500/20 text-success-400 border border-success-500/30' if category == 'success'
+                         else 'bg-danger-500/20 text-danger-400 border border-danger-500/30' if category == 'danger'
+                         else 'bg-amber-500/20 text-amber-400 border border-amber-500/30' if category == 'warning'
+                         else 'bg-brand-500/20 text-brand-400 border border-brand-500/30' }}">
+            <span aria-hidden="true">
+              {{ '✅' if category == 'success' else '❌' if category == 'danger' else '⚠️' if category == 'warning' else 'ℹ️' }}
+            </span>
+            {{ message }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+
+      <main id="main-content" role="main" tabindex="-1" class="flex-1 overflow-y-auto p-6">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ── Public layout (login, errors) ─────────────────────────────────── -->
+  <main id="main-content" role="main" tabindex="-1" class="min-h-full flex flex-col">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div role="alert" aria-live="assertive" class="fixed top-4 right-4 space-y-2 z-50 max-w-sm">
+        {% for category, message in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium shadow-lg
+                    {{ 'bg-success-600 text-white' if category == 'success'
+                       else 'bg-danger-600 text-white' if category == 'danger'
+                       else 'bg-amber-500 text-black' if category == 'warning'
+                       else 'bg-brand-600 text-white' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  {% endif %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

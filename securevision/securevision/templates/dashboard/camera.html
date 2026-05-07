@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Live Camera Feed{% endblock %}
+{% block page_title %}Live Camera Feed{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+      <h2 class="font-semibold text-white flex items-center gap-2">
+        <span aria-hidden="true">📷</span> Security Camera
+      </h2>
+      <div class="flex items-center gap-2 text-sm" role="status" aria-live="polite">
+        {% if camera_active %}
+        <span class="w-2 h-2 rounded-full bg-success-400 animate-pulse" aria-hidden="true"></span>
+        <span class="text-success-400 font-medium">Live</span>
+        {% else %}
+        <span class="w-2 h-2 rounded-full bg-slate-500" aria-hidden="true"></span>
+        <span class="text-slate-400">Offline</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bg-slate-950 aspect-video flex items-center justify-center">
+      {% if camera_active %}
+      <img src="{{ url_for('camera.feed') }}"
+           alt="Live security camera feed — streaming video from security camera"
+           class="w-full h-full object-contain"
+           id="live-feed" />
+      {% else %}
+      <div class="text-center py-16" role="status">
+        <span class="text-5xl block mb-4" aria-hidden="true">📷</span>
+        <p class="text-slate-400 font-medium">Camera feed is unavailable</p>
+        <p class="text-slate-500 text-sm mt-1 max-w-sm mx-auto">
+          Check that the camera source is correctly configured in your environment settings
+          and that the device is connected.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="px-5 py-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      <span>Source: <code class="font-mono text-slate-300">{{ config.CAMERA_SOURCE }}</code></span>
+      <a href="{{ url_for('camera.snapshot') }}"
+         class="text-brand-400 hover:text-brand-300 font-medium"
+         aria-label="Download current camera snapshot">
+        📥 Save snapshot
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

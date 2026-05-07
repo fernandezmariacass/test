@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- ── Stat cards ───────────────────────────────────────────────────── -->
+  <section aria-labelledby="stats-heading">
+    <h2 id="stats-heading" class="sr-only">System statistics</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      {% set stats = [
+        ('Total Users',     users_count|default(0),     '👥', 'brand'),
+        ('Login Attempts',  total_logins|default(0),    '🔑', 'brand'),
+        ('Failed Logins',   failed_logins|default(0),   '⚠️',  'danger'),
+        ('Blocked IPs',     blocked_ips|default(0),     '🚫', 'accent'),
+      ] %}
+      {% for label, value, icon, color in stats %}
+      <article class="bg-slate-900 border border-slate-800 rounded-xl p-5"
+               aria-label="{{ label }}: {{ value }}">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ label }}</p>
+            <p class="mt-2 text-3xl font-bold text-white tabular-nums">{{ value }}</p>
+          </div>
+          <span class="text-2xl" aria-hidden="true">{{ icon }}</span>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ── Camera + Recent logs ─────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Live camera feed -->
+    <section aria-labelledby="camera-heading"
+             class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h2 id="camera-heading" class="font-semibold text-white flex items-center gap-2">
+          <span aria-hidden="true">📷</span> Live Camera Feed
+        </h2>
+        <a href="{{ url_for('camera.view') }}"
+           class="text-xs text-brand-400 hover:text-brand-300 font-medium">
+          Full view →
+        </a>
+      </div>
+
+      <div class="relative bg-slate-950 aspect-video flex items-center justify-center">
+        {% if camera_active %}
+        <img src="{{ url_for('camera.feed') }}"
+             alt="Live security camera feed"
+             aria-live="polite"
+             class="w-full h-full object-cover"
+             id="camera-img" />
+        <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm
+                    rounded-full px-2.5 py-1 text-xs text-success-400 font-medium"
+             aria-hidden="true">
+          <span class="w-1.5 h-1.5 rounded-full bg-success-400 animate-pulse"></span>
+          LIVE
+        </div>
+        {% else %}
+        <div class="text-center text-slate-500 py-12" role="status">
+          <span class="text-4xl block mb-3" aria-hidden="true">📷</span>
+          <p class="text-sm font-medium">Camera feed unavailable</p>
+          <p class="text-xs mt-1">Check camera connection or configuration</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Recent access log -->
+    <section aria-labelledby="log-heading"
+             class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h2 id="log-heading" class="font-semibold text-white flex items-center gap-2">
+          <span aria-hidden="true">📋</span> Recent Activity
+        </h2>
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('admin.logs') }}"
+           class="text-xs text-brand-400 hover:text-brand-300 font-medium">
+          All logs →
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="divide-y divide-slate-800 overflow-y-auto max-h-80" role="feed"
+           aria-label="Recent login activity">
+        {% if recent_logs %}
+          {% for log in recent_logs %}
+          <article class="px-5 py-3 flex items-start gap-3 text-sm"
+                   aria-label="{{ 'Successful' if log.success else 'Failed' }} login by {{ log.username_attempted }} from {{ log.ip_address }}">
+            <span aria-hidden="true" class="mt-0.5 text-base flex-shrink-0">
+              {{ '✅' if log.success else '❌' }}
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-white truncate">{{ log.username_attempted }}</p>
+              <p class="text-xs text-slate-400 font-mono">{{ log.ip_address }}</p>
+              <time class="text-xs text-slate-500"
+                    datetime="{{ log.timestamp.isoformat() }}">
+                {{ log.timestamp.strftime('%d %b %H:%M') }}
+              </time>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+        <div class="px-5 py-8 text-center text-slate-500 text-sm" role="status">
+          No activity yet
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Your IP ───────────────────────────────────────────────────────── -->
+  <div class="bg-brand-900/30 border border-brand-700/40 rounded-xl px-5 py-4 flex items-center gap-4">
+    <span class="text-2xl" aria-hidden="true">🌐</span>
+    <div>
+      <p class="text-xs text-brand-300 font-medium uppercase tracking-wider">Your current IP address</p>
+      <p class="font-mono text-white text-lg font-semibold mt-0.5" aria-label="Your IP address is {{ client_ip }}">
+        {{ client_ip }}
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

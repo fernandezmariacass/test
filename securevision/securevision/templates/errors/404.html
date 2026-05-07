@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found (404){% endblock %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+    <span class="text-6xl block mb-4" role="img" aria-label="Magnifying glass">🔍</span>
+    <h1 class="text-4xl font-bold text-white mb-3">Page Not Found</h1>
+    <p class="text-slate-400 mb-8">The page you are looking for does not exist or has been moved.</p>
+    <a href="{{ url_for('dashboard.index') if current_user.is_authenticated else url_for('auth.login') }}"
+       class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white
+              font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors">
+      ← Go Back
+    </a>
+  </div>
+</div>
+{% endblock %}

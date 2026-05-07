@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- Add user form -->
+  <section aria-labelledby="add-user-heading"
+           class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800">
+      <h2 id="add-user-heading" class="font-semibold text-white">Add New User</h2>
+    </div>
+    <form method="POST" action="{{ url_for('admin.add_user') }}" novalidate class="p-5 space-y-4">
+      {{ form.hidden_tag() }}
+
+      {% for field in [form.username, form.email, form.password, form.confirm] %}
+      <div>
+        <label for="{{ field.id }}" class="block text-xs font-medium text-slate-300 mb-1.5">
+          {{ field.label.text }} <span class="text-danger-400" aria-hidden="true">*</span>
+        </label>
+        {{ field(class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm
+                        text-white placeholder-slate-500 focus:border-brand-500 focus:ring-0") }}
+        {% if field.errors %}
+        <p class="mt-1 text-xs text-danger-400" role="alert">{{ field.errors[0] }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div>
+        <label for="{{ form.role.id }}" class="block text-xs font-medium text-slate-300 mb-1.5">
+          Role <span class="text-danger-400" aria-hidden="true">*</span>
+        </label>
+        {{ form.role(class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm
+                           text-white focus:border-brand-500 focus:ring-0") }}
+      </div>
+
+      <button type="submit"
+              class="w-full bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold
+                     py-2.5 rounded-lg transition-colors">
+        {{ form.submit.label.text }}
+      </button>
+    </form>
+  </section>
+
+  <!-- Users list -->
+  <section aria-labelledby="users-list-heading" class="lg:col-span-2
+           bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800">
+      <h2 id="users-list-heading" class="font-semibold text-white">
+        All Users
+        <span class="ml-2 text-xs text-slate-400 font-normal">({{ users|length }} accounts)</span>
+      </h2>
+    </div>
+
+    <div class="divide-y divide-slate-800">
+      {% for user in users %}
+      <div class="px-5 py-4 flex items-center justify-between gap-4"
+           aria-label="User {{ user.username }}, role {{ user.role }}, {{ 'active' if user.is_active else 'inactive' }}">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center
+                      text-sm font-bold text-white select-none
+                      {{ 'bg-brand-600' if user.is_active else 'bg-slate-700' }}"
+               aria-hidden="true">
+            {{ user.username[0].upper() }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-white truncate">{{ user.username }}</p>
+            <p class="text-xs text-slate-400 truncate">{{ user.email }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <span class="px-2 py-0.5 rounded-full text-xs font-semibold capitalize
+                       {{ 'bg-amber-500/20 text-amber-400' if user.role == 'admin'
+                          else 'bg-brand-500/20 text-brand-400' if user.role == 'operator'
+                          else 'bg-slate-700 text-slate-300' }}">
+            {{ user.role }}
+          </span>
+          <form method="POST"
+                action="{{ url_for('admin.toggle_user', user_id=user.id) }}"
+                style="display:inline">
+            {{ form.hidden_tag() }}
+            <button type="submit"
+                    aria-label="{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.username }}"
+                    class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors
+                           {{ 'bg-danger-500/20 text-danger-400 hover:bg-danger-500/30' if user.is_active
+                              else 'bg-success-500/20 text-success-400 hover:bg-success-500/30' }}">
+              {{ 'Deactivate' if user.is_active else 'Activate' }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
